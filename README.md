@@ -1,6 +1,6 @@
 # Zigbe_SS600ZB_automation
+![alt text](https://github.com/alesoft73/Zigbe_SS600ZB_automation/blob/main/push_button.png)
 
-https://github.com/alesoft73/Zigbe_SS600ZB_automation/blob/main/push_button.png
 
 
 My SS600ZB Wireless switch with 3 buttons (white-label of TuYa TS0043)
