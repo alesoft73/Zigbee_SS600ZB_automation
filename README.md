@@ -1,5 +1,5 @@
 # Zigbe_SS600ZB_automation
-![alt text](https://github.com/alesoft73/Zigbe_SS600ZB_automation/blob/main/push_button.png)
+![alt text](https://github.com/alesoft73/Zigbee_SS600ZB_automation/blob/main/push_button.png)
 
 
 
