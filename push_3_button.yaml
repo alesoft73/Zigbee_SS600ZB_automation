@@ -1,0 +1,256 @@
+
+script: 
+  notifica_elettrodomestico_acceso:
+    mode: parallel
+    sequence:
+      - delay: "00:00:03"
+      - choose:
+        - conditions:
+            - condition: template
+              value_template: "{% if elettrodomestico|trim in 'input_boolean' %}True{% else %}False{% endif %}"
+          sequence:
+            - service: script.invia_tts_mediaplayer
+              data:
+                message: >-
+                 {% set inclusion = elettrodomestico %}
+                 {%- if states[inclusion].state == 'on' -%}
+                 {{ states[inclusion].name }} accese
+                 {% else %}
+                 {{ states[inclusion].name }} spente
+                 {% endif %}
+        - conditions:
+            - condition: template
+              value_template: "{{ states[elettrodomestico].state == 'on' }}"
+          sequence:
+            - service: script.invia_tts_mediaplayer
+              data:
+                message: >-
+                 {% set inclusion = elettrodomestico %}
+                 {%- if states[inclusion].name in ['Forno','Microonde','Deumidificatore Bagno'] -%}
+                 {{ states[inclusion].name }} acceso
+                 {% else %}
+                 {{ states[inclusion].name }} accesa
+                 {% endif %}
+        default: 
+          - service: script.invia_tts_mediaplayer
+            data:
+              message: >-
+               {% set inclusion = elettrodomestico %}
+               {%- if states[inclusion].name in ['Forno','Microonde','Deumidificatore Bagno'] -%}
+               {{ states[inclusion].name }} spento
+               {% elif inclusion|trim == 'switch.tutti' %}
+               Tutti gli elettrodomestici sono spenti               
+               {% else %}
+               {{ states[inclusion].name }} spenta
+               {% endif %}
+
+automation:
+
+  - id: fb2d02a0-69f7-4710-b96c-c56dd422fgf6
+    alias: Accensione Elettrodmoestici Telecomando Cucina
+    initial_state: 'true'
+    mode: parallel
+    trigger:
+      - platform: state
+        entity_id: sensor.0x847127fffe0a4158_action
+        to: 1_single
+      - platform: state
+        entity_id: sensor.0x847127fffe0a4158_action
+        to: 2_single
+      - platform: state
+        entity_id: sensor.0x847127fffe0a4158_action
+        to: 3_single
+      - platform: state
+        entity_id: sensor.0x847127fffe0a4158_action
+        to: 1_double
+      - platform: state
+        entity_id: sensor.0x847127fffe0a4158_action
+        to: 1_hold
+      - platform: state
+        entity_id: sensor.0x847127fffe0a4158_action
+        to: 3_hold
+    action:
+      choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.to_state.state|trim == '1_single' }}"
+          sequence: 
+            - service: >
+                {% if states('switch.microonde')|trim != 'on' %}
+                switch.turn_on
+                {% else %}
+                switch.turn_off
+                {% endif %}
+              entity_id: switch.microonde
+            - service: script.notifica_elettrodomestico_acceso
+              data_template:
+                elettrodomestico: >-
+                  switch.microonde
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.to_state.state|trim == '2_single' }}"
+          sequence:
+            - service: >
+                {% if states('switch.sonoff_10009ce760')|trim != 'on' %}
+                switch.turn_on
+                {% else %}
+                switch.turn_off
+                {% endif %}
+              entity_id: switch.sonoff_10009ce760
+            - service: script.notifica_elettrodomestico_acceso
+              data_template:
+                elettrodomestico: >-
+                  switch.sonoff_10009ce760
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.to_state.state|trim == '3_single' }}" 
+          sequence:
+            - service: >
+                {% if states('switch.lavastoviglie')|trim != 'on' %}
+                switch.turn_on
+                {% else %}
+                switch.turn_off
+                {% endif %}
+              entity_id: switch.lavastoviglie
+            - service: script.notifica_elettrodomestico_acceso
+              data_template:
+                elettrodomestico: >-
+                  switch.lavastoviglie
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.to_state.state|trim == '1_double' }}" 
+              #and states('switch.caffe')|trim != 'on' }}"
+          sequence:
+            - service: >
+                {% if states('switch.caffe')|trim != 'on' %}
+                switch.turn_on
+                {% else %}
+                switch.turn_off
+                {% endif %}
+              entity_id: switch.caffe
+            - service: script.notifica_elettrodomestico_acceso
+              data_template:
+                elettrodomestico: >-
+                  switch.caffe
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.to_state.state|trim == '3_hold' }}"
+          sequence:
+            - service: homeassistant.turn_off
+              entity_id: [switch.microonde, switch.caffe, switch.sonoff_10009ce760, switch.lavastoviglie]
+            - service: script.notifica_elettrodomestico_acceso
+              data_template:
+                elettrodomestico: >-
+                  switch.tutti
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.to_state.state|trim == '2_hold' }}" 
+          sequence:
+            - service: >
+                {% if states('input_boolean.active_auto_on_light')|trim != 'on' %}
+                homeassistant.turn_on
+                {% else %}
+                homeassistant.turn_off
+                {% endif %}
+              entity_id: input_boolean.active_auto_on_light
+            - service: script.notifica_elettrodomestico_acceso
+              data_template:
+                elettrodomestico: >-
+                  input_boolean.active_auto_on_light
+
+
+  - id: fb2d1202a0-6912f7-4731-10-b9216c-c56d12d422fgf6
+    alias: Accensione Elettrodmoestici Telecomando Bagno
+    initial_state: 'true'
+    mode: parallel
+    trigger:
+      - platform: state
+        entity_id: sensor.0x847127fffe13bc2d_action
+        to: 1_single
+      - platform: state
+        entity_id: sensor.0x847127fffe13bc2d_action
+        to: 2_single
+      - platform: state
+        entity_id: sensor.0x847127fffe13bc2d_action
+        to: 3_single
+      - platform: state
+        entity_id: sensor.0x847127fffe13bc2d_action
+        to: 2_hold
+      - platform: state
+        entity_id: sensor.0x847127fffe13bc2d_action
+        to: 3_hold
+    action:
+      choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.to_state.state|trim == '1_single' }}"
+          sequence: 
+            - service: >
+                {% if states('switch.lavatrice')|trim != 'on' %}
+                switch.turn_on
+                {% else %}
+                switch.turn_off
+                {% endif %}
+              entity_id: switch.lavatrice
+            - service: script.notifica_elettrodomestico_acceso
+              data_template:
+                elettrodomestico: >-
+                  switch.lavatrice
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.to_state.state|trim == '2_single' }}"
+              #and states('switch.sonoff_10009ce760')|trim != 'on' }}"
+          sequence:
+            - service: >
+                {% if states('switch.sonoff')|trim != 'on' %}
+                switch.turn_on
+                {% else %}
+                switch.turn_off
+                {% endif %}
+              entity_id: switch.sonoff
+            - service: script.notifica_elettrodomestico_acceso
+              data_template:
+                elettrodomestico: >-
+                  switch.sonoff
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.to_state.state|trim == '3_single' }}" 
+              # and states('switch.lavastoviglie')|trim != 'on' }}
+          sequence:
+            - service: >
+                {% if states('switch.sonoff_100022a57d')|trim != 'on' %}
+                switch.turn_on
+                {% else %}
+                switch.turn_off
+                {% endif %}
+              entity_id: switch.sonoff_100022a57d
+            - service: script.notifica_elettrodomestico_acceso
+              data_template:
+                elettrodomestico: >-
+                  switch.sonoff_100022a57d
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.to_state.state|trim == '2_hold' }}" 
+              #and states('switch.caffe')|trim != 'on' }}"
+          sequence:
+            - service: >
+                {% if states('input_boolean.active_auto_on_light')|trim != 'on' %}
+                homeassistant.turn_on
+                {% else %}
+                homeassistant.turn_off
+                {% endif %}
+              entity_id: input_boolean.active_auto_on_light
+            - service: script.notifica_elettrodomestico_acceso
+              data_template:
+                elettrodomestico: >-
+                  input_boolean.active_auto_on_light
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.to_state.state|trim == '3_hold' }}"
+          sequence:
+            - service: homeassistant.turn_off
+              entity_id: [switch.sonoff_100022a57d, switch.sonoff, switch.lavatrice]
+            - service: script.notifica_elettrodomestico_acceso
+              data_template:
+                elettrodomestico: >-
+                  switch.tutti
