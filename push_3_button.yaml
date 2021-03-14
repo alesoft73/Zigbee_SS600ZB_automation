@@ -4,46 +4,26 @@ script:
     mode: parallel
     sequence:
       - delay: "00:00:03"
-      - choose:
-        - conditions:
-            - condition: template
-              value_template: "{% if elettrodomestico|trim in 'input_boolean' %}True{% else %}False{% endif %}"
-          sequence:
-            - service: script.invia_tts_mediaplayer
-              data:
-                message: >-
-                 {% set inclusion = elettrodomestico %}
-                 {%- if states[inclusion].state == 'on' -%}
-                 {{ states[inclusion].name }} accese
-                 {% else %}
-                 {{ states[inclusion].name }} spente
-                 {% endif %}
-        - conditions:
-            - condition: template
-              value_template: "{{ states[elettrodomestico].state == 'on' }}"
-          sequence:
-            - service: script.invia_tts_mediaplayer
-              data:
-                message: >-
-                 {% set inclusion = elettrodomestico %}
-                 {%- if states[inclusion].name in ['Forno','Microonde','Deumidificatore Bagno'] -%}
-                 {{ states[inclusion].name }} acceso
-                 {% else %}
-                 {{ states[inclusion].name }} accesa
-                 {% endif %}
-        default: 
-          - service: script.invia_tts_mediaplayer
-            data:
-              message: >-
-               {% set inclusion = elettrodomestico %}
-               {%- if states[inclusion].name in ['Forno','Microonde','Deumidificatore Bagno'] -%}
-               {{ states[inclusion].name }} spento
-               {% elif inclusion|trim == 'switch.tutti' %}
-               Tutti gli elettrodomestici sono spenti               
-               {% else %}
-               {{ states[inclusion].name }} spenta
-               {% endif %}
-
+      - condition: template
+        value_template: "{{ elettrodomestico|trim !='' }}"
+      - service: script.invia_tts_mediaplayer
+        data:
+          message: >-
+           {% set inclusion = elettrodomestico %}
+           {%- if states[inclusion].name in ['Forno','Microonde','Deumidificatore Bagno'] and states[inclusion].state == 'on' -%}
+           {{ states[inclusion].name }} acceso
+           {% elif states[inclusion].state == 'on' %}
+           {{ states[inclusion].name }} accesa
+           {%- elif states[inclusion].name in ['Forno','Microonde','Deumidificatore Bagno'] and states[inclusion].state == 'off' -%}
+           {{ states[inclusion].name }} spento
+           {% elif states[inclusion].state == 'off' %}
+           {{ states[inclusion].name }} spenta
+           {% elif elettrodomestico|trim == 'switch.tutti' %}
+           Tutti gli elettrodomestici sono spenti        
+           {% else %}
+           Errore, controlla la configurazione!
+           {% endif %}      
+           
 automation:
 
   - id: fb2d02a0-69f7-4710-b96c-c56dd422fgf6
