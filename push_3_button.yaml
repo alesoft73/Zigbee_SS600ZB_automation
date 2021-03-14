@@ -24,6 +24,7 @@ script:
            Errore, controlla la configurazione!
            {% endif %}      
 
+
 automation:
 
   - id: fb2d02a0-69f7-4710-b96c-c56dd422fgf6
