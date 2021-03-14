@@ -1,5 +1,5 @@
-
-script: 
+script:
+ 
   notifica_elettrodomestico_acceso:
     mode: parallel
     sequence:
